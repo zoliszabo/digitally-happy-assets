@@ -6,9 +6,32 @@ class AssetManager
 {
     public $loaded;
 
+    protected $assetsVersion = null;
+
     public function __construct()
     {
         $this->loaded = [];
+    }
+
+    /**
+     * Set the version of the assets (useful for cache bursting, for example).
+     */
+    public function setAssetsVersion(?string $version): void
+    {
+        $this->assetsVersion = $version;
+    }
+
+    protected function applyAssetsVersionToPath(string $path): string
+    {
+        if (!empty($this->assetsVersion)) {
+            if (strpos($path, '?') === false) {
+                $path .= '?' . $this->assetsVersion;
+            }
+            else {
+                $path .= '&' . $this->assetsVersion;
+            }
+        }
+        return $path;
     }
 
     public function echoCss($path)
@@ -18,6 +41,8 @@ class AssetManager
         }
 
         $this->markAsLoaded($path);
+
+        $path = $this->applyAssetsVersionToPath($path);
 
         echo '<link href="'.asset($path).'" rel="stylesheet" type="text/css" />';
     }
@@ -29,6 +54,8 @@ class AssetManager
         }
 
         $this->markAsLoaded($path);
+
+        $path = $this->applyAssetsVersionToPath($path);
 
         echo '<script src="'.asset($path).'"></script>';
     }
